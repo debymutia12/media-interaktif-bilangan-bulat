@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petualangan Bilangan Bulat</title>
+    <!-- Tailwind CSS untuk styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome untuk icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Fredoka+One&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #f0f9ff; /* Warna latar belakang biru muda (suhu dingin) */
+            /* Gradient background mirip langit/cuaca */
+            background-image: linear-gradient(to bottom, #e0f2fe, #bae6fd);
+            min-height: 100vh;
+            color: #1e293b;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, .title-font {
+            font-family: 'Fredoka One', cursive;
+        }
+
+        /* Navigasi / Tab Style */
+        .tab-btn {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .tab-btn::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 4px;
+            background-color: #ef4444; /* Merah panas */
+            transition: width 0.3s ease;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .tab-btn.active::after {
+            width: 100%;
+        }
+        
+        .tab-btn.active {
+            color: #b91c1c;
+            transform: scale(1.05);
+            font-weight: bold;
+        }
+
+        /* Sembunyikan section secara default */
+        .section {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- Komponen Termometer Custom --- */
+        .thermometer-container {
+            width: 80px;
+            height: 300px;
+            position: relative;
+            margin: 0 auto;
+        }
+
+        .thermometer-glass {
+            width: 40px;
+            height: 250px;
+            background: rgba(255, 255, 255, 0.8);
+            border: 3px solid #cbd5e1;
+            border-radius: 20px 20px 0 0;
+            position: absolute;
+            left: 20px;
+            top: 0;
+            z-index: 2;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .thermometer-bulb {
+            width: 60px;
+            height: 60px;
+            background: #ef4444;
+            border-radius: 50%;
+            position: absolute;
+            bottom: 0;
+            left: 10px;
+            z-index: 3;
+            box-shadow: inset -5px -5px 10px rgba(0,0,0,0.2), 0 5px 10px rgba(0,0,0,0.2);
+            border: 3px solid #cbd5e1;
+        }
+        
+        .bulb-highlight {
+            width: 15px;
+            height: 15px;
+            background: rgba(255,255,255,0.6);
+            border-radius: 50%;
+            position: absolute;
+            top: 10px;
+            left: 10px;
+        }
+
+        .thermometer-liquid {
+            width: 20px;
+            background: linear-gradient(to top, #ef4444, #f87171);
+            position: absolute;
+            bottom: 50px; /* di atas bulb */
+            left: 30px;
+            z-index: 1;
+            border-radius: 10px 10px 0 0;
+            transition: height 0.5s ease, background 0.5s ease;
+            height: 50%; /* Default */
+        }
+        
+        .liquid-cold { background: linear-gradient(to top, #3b82f6, #60a5fa); }
+        .liquid-hot { background: linear-gradient(to top, #ef4444, #f87171); }
+        .liquid-zero { background: linear-gradient(to top, #10b981, #34d399); }
+
+        .thermometer-marks {
+            position: absolute;
+            height: 200px;
+            right: 5px;
+            top: 25px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            z-index: 4;
+        }
+
+        .mark {
+            width: 10px;
+            height: 2px;
+            background: #64748b;
+        }
+        
+        .mark-label {
+            position: absolute;
+            right: -25px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #475569;
+            transform: translateY(-50%);
+        }
+
+        /* --- Flash Card Styles --- */
+        .flashcard-container {
+            perspective: 1000px;
+            width: 100%;
+            max-width: 400px;
+            height: 250px;
+            margin: 0 auto;
+        }
+
+        .flashcard {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-radius: 1rem;
+        }
+
+        .flashcard.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-front, .flashcard-back {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 1rem;
+            padding: 2rem;
+            text-align: center;
+            border: 4px solid #fff;
+        }
+
+        .flashcard-front {
+            background: linear-gradient(135deg, #f87171, #ef4444); /* Merah/Panas */
+            color: white;
+        }
+
+        .flashcard-back {
+            background: linear-gradient(135deg, #60a5fa, #3b82f6); /* Biru/Dingin */
+            color: white;
+            transform: rotateY(180deg);
+        }
+        
+        /* Tema Flashcard Netral/Nol */
+        .flashcard.zero .flashcard-front { background: linear-gradient(135deg, #34d399, #10b981); }
+        .flashcard.zero .flashcard-back { background: linear-gradient(135deg, #34d399, #10b981); }
+        
+        /* Tema Flashcard Negatif */
+        .flashcard.negative .flashcard-front { background: linear-gradient(135deg, #60a5fa, #3b82f6); }
+        .flashcard.negative .flashcard-back { background: linear-gradient(135deg, #f87171, #ef4444); }
+
+
+        /* --- Menjodohkan Styles --- */
+        .match-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        
+        .match-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .match-item {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 2px solid #e2e8f0;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            font-weight: bold;
+            user-select: none;
+        }
+
+        .match-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+            border-color: #94a3b8;
+        }
+
+        .match-item.selected {
+            background-color: #fef08a;
+            border-color: #eab308;
+            transform: scale(1.05);
+        }
+
+        .match-item.matched {
+            background-color: #bbf7d0;
+            border-color: #22c55e;
+            color: #166534;
+            cursor: default;
+            opacity: 0.8;
+            transform: none;
+        }
+        
+        .match-item.wrong-match {
+            animation: shake 0.5s;
+            background-color: #fecaca;
+            border-color: #ef4444;
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+        
+        /* SVG Line layer untuk menjodohkan */
+        #match-svg-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* --- Game Styles --- */
+        #game-canvas {
+            background-color: #87CEEB; /* Warna langit */
+            border-radius: 12px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.2), 0 10px 25px rgba(0,0,0,0.1);
+            display: block;
+            margin: 0 auto;
+            max-width: 100%;
+            border: 4px solid #475569;
+        }
+        
+        .game-btn {
+            background: linear-gradient(to bottom, #f59e0b, #d97706);
+            border-bottom: 4px solid #b45309;
+            transition: all 0.1s;
+        }
+        .game-btn:active {
+            transform: translateY(4px);
+            border-bottom: 0px;
+        }
+
+        /* General Button Styles */
+        .btn-action {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .btn-action:active {
+            transform: translateY(1px);
+        }
+
+        /* Modal/Popup Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 50;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            max-width: 90%;
+            width: 400px;
+            text-align: center;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        /* Hiasan background */
+        .bg-decoration {
+            position: fixed;
+            z-index: -1;
+            opacity: 0.1;
+        }
+        .snow-flake { color: #3b82f6; font-size: 2rem; }
+        .sun-icon { color: #ef4444; font-size: 2rem; }
+
+    </style>
+</head>
+<body class="relative">
+
+    <div class="bg-decoration snow-flake" style="top: 10%; left: 5%;"><i class="fas fa-snowflake"></i></div>
+    <div class="bg-decoration sun-icon" style="top: 15%; right: 10%;"><i class="fas fa-fire"></i></div>
+    <div class="bg-decoration snow-flake" style="bottom: 20%; right: 5%;"><i class="fas fa-icicles"></i></div>
+    <div class="bg-decoration sun-icon" style="bottom: 10%; left: 10%;"><i class="fas fa-sun"></i></div>
+
+    <header class="bg-white/80 backdrop-blur-md shadow-md sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center">
+            <div class="flex items-center gap-3 text-2xl title-font text-blue-800 mb-2 md:mb-0">
+                <i class="fas fa-temperature-half text-red-500"></i>
+                <span>Suhu & Bilangan Bulat</span>
+            </div>
+            
+            <nav class="flex flex-wrap justify-center gap-2 md:gap-4 font-semibold text-gray-600">
+                <button class="tab-btn active px-3 py-2 hover:text-blue-600 rounded-md" onclick="showSection('materi')">
+                    <i class="fas fa-book-open mr-1"></i> Materi
+                </button>
+                <button class="tab-btn px-3 py-2 hover:text-blue-600 rounded-md" onclick="showSection('flashcard')">
+                    <i class="fas fa-clone mr-1"></i> Flash Card
+                </button>
+                <button class="tab-btn px-3 py-2 hover:text-blue-600 rounded-md" onclick="showSection('benarsalah')">
+                    <i class="fas fa-check-double mr-1"></i> Benar/Salah
+                </button>
+                <button class="tab-btn px-3 py-2 hover:text-blue-600 rounded-md" onclick="showSection('menjodohkan')">
+                    <i class="fas fa-random mr-1"></i> Pasangkan
+                </button>
+                <button class="tab-btn px-3 py-2 hover:text-blue-600 rounded-md" onclick="showSection('kuis')">
+                    <i class="fas fa-list-ol mr-1"></i> Kuis
+                </button>
+                <button class="tab-btn px-3 py-2 hover:text-blue-600 rounded-md text-orange-600" onclick="showSection('game')">
+                    <i class="fas fa-gamepad mr-1"></i> Game
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto p-4 py-8">
+
+        <!-- ================= SECTION 1: MATERI ================= -->
+        <section id="materi" class="section active">
+            <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8 border-t-8 border-blue-400">
+                <h2 class="text-3xl text-center text-blue-800 mb-6"><i class="fas fa-info-circle text-blue-500"></i> Mengenal Bilangan Bulat</h2>
+                
+                <div class="flex flex-col md:flex-row gap-8 items-center">
+                    <!-- Termometer Visual -->
+                    <div class="w-full md:w-1/3 flex flex-col items-center">
+                        <h3 class="text-lg font-bold text-gray-700 mb-2">Termometer Suhu</h3>
+                        <div class="thermometer-container">
+                            <div class="thermometer-glass"></div>
+                            <div class="thermometer-liquid" id="materi-liquid" style="height: 50%;"></div>
+                            <div class="thermometer-bulb">
+                                <div class="bulb-highlight"></div>
+                            </div>
+                            <div class="thermometer-marks">
+                                <div class="mark" style="position: absolute; top: 0;"><span class="mark-label text-red-600">50°</span></div>
+                                <div class="mark" style="position: absolute; top: 50px;"><span class="mark-label text-orange-500">25°</span></div>
+                                <div class="mark" style="position: absolute; top: 100px; width: 15px; background: #10b981;"><span class="mark-label text-green-600">0°</span></div>
+                                <div class="mark" style="position: absolute; top: 150px;"><span class="mark-label text-blue-400">-25°</span></div>
+                                <div class="mark" style="position: absolute; top: 200px;"><span class="mark-label text-blue-700">-50°</span></div>
+                            </div>
+                        </div>
+                        <div class="mt-6 flex gap-2">
+                            <button onclick="setTermometer(-30)" class="btn-action bg-blue-500 text-white px-3 py-1 rounded shadow"><i class="fas fa-snowflake"></i> Dingin</button>
+                            <button onclick="setTermometer(0)" class="btn-action bg-green-500 text-white px-3 py-1 rounded shadow">Nol</button>
+                            <button onclick="setTermometer(40)" class="btn-action bg-red-500 text-white px-3 py-1 rounded shadow"><i class="fas fa-fire"></i> Panas</button>
+                        </div>
+                    </div>
+
+                    <!-- Penjelasan -->
+                    <div class="w-full md:w-2/3 space-y-4 text-lg">
+                        <p class="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500">
+                            <strong>Bilangan Bulat</strong> terdiri dari bilangan bulat positif, nol, dan bilangan bulat negatif.
+                        </p>
+                        <p>Coba bayangkan sebuah <strong>Termometer Suhu</strong>:</p>
+                        <ul class="list-disc pl-5 space-y-2">
+                            <li><span class="font-bold text-red-500">Bilangan Positif (+)</span> seperti suhu panas, letaknya di <strong>atas nol</strong>. Contoh: 5, 10, 25.</li>
+                            <li><span class="font-bold text-green-600">Nol (0)</span> adalah titik tengah, tidak positif dan tidak negatif. Misalnya saat air membeku.</li>
+                            <li><span class="font-bold text-blue-600">Bilangan Negatif (-)</span> seperti suhu dingin/beku, letaknya di <strong>bawah nol</strong>. Contoh: -5, -10, -20. Dibaca "negatif lima".</li>
+                        </ul>
+                        <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200 mt-4">
+                            <p class="font-bold text-yellow-800"><i class="fas fa-lightbulb"></i> Ingat!</p>
+                            <p>Semakin ke atas/kanan nilainya semakin <strong>besar</strong>. Semakin ke bawah/kiri nilainya semakin <strong>kecil</strong>.</p>
+                            <p class="mt-2 text-center text-xl font-bold"> -5 &nbsp; < &nbsp; -2 &nbsp; < &nbsp; 0 &nbsp; < &nbsp; 3 &nbsp; < &nbsp; 7</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 2: FLASH CARD ================= -->
+        <section id="flashcard" class="section">
+            <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8 border-t-8 border-purple-400">
+                <div class="text-center mb-6">
+                    <h2 class="text-3xl text-purple-800 title-font"><i class="fas fa-clone"></i> Kartu Pintar (Flash Card)</h2>
+                    <p class="text-gray-600 mt-2">Klik kartu untuk membaliknya dan melihat penjelasan suhu!</p>
+                </div>
+
+                <div class="flex flex-col items-center">
+                    <div class="flashcard-container" onclick="flipCard()">
+                        <div id="fc-card" class="flashcard">
+                            <div class="flashcard-front" id="fc-front">
+                                <span class="text-6xl font-bold" id="fc-number">5°C</span>
+                                <span class="mt-4 text-xl"><i class="fas fa-hand-pointer animate-bounce mt-2 inline-block"></i> Klik untuk balik</span>
+                            </div>
+                            <div class="flashcard-back" id="fc-back">
+                                <span class="text-3xl font-bold mb-4" id="fc-desc">Suhu di atas nol</span>
+                                <i id="fc-icon" class="fas fa-sun text-5xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-center gap-4 mt-8 w-full">
+                        <button onclick="prevCard()" class="btn-action bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-full shadow">
+                            <i class="fas fa-arrow-left"></i> Sebelumnya
+                        </button>
+                        <span class="py-3 px-4 font-bold text-gray-500" id="fc-counter">1 / 5</span>
+                        <button onclick="nextCard()" class="btn-action bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-full shadow">
+                            Selanjutnya <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 3: BENAR / SALAH ================= -->
+        <section id="benarsalah" class="section">
+            <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8 border-t-8 border-green-400 text-center">
+                <h2 class="text-3xl text-green-700 title-font mb-2"><i class="fas fa-balance-scale"></i> Benar atau Salah?</h2>
+                <p class="text-gray-600 mb-8">Pilih apakah pernyataan di bawah ini Benar atau Salah.</p>
+                
+                <div class="max-w-2xl mx-auto bg-gray-50 rounded-xl p-6 border-2 border-gray-200 mb-8 shadow-inner relative">
+                    <div class="absolute top-0 left-0 bg-green-500 text-white px-3 py-1 rounded-br-lg rounded-tl-xl font-bold">
+                        Soal <span id="tf-current">1</span>/<span id="tf-total">5</span>
+                    </div>
+                    <h3 id="tf-question" class="text-2xl font-bold text-gray-800 mt-4 mb-8 min-h-[80px] flex items-center justify-center">
+                        Suhu -5°C lebih dingin daripada suhu -10°C.
+                    </h3>
+                    
+                    <div class="flex justify-center gap-6">
+                        <button onclick="checkTrueFalse(true)" class="btn-action flex-1 bg-green-100 hover:bg-green-500 hover:text-white text-green-700 border-2 border-green-500 font-bold py-4 px-6 rounded-xl text-xl transition-colors">
+                            <i class="fas fa-check-circle mr-2"></i> BENAR
+                        </button>
+                        <button onclick="checkTrueFalse(false)" class="btn-action flex-1 bg-red-100 hover:bg-red-500 hover:text-white text-red-700 border-2 border-red-500 font-bold py-4 px-6 rounded-xl text-xl transition-colors">
+                            <i class="fas fa-times-circle mr-2"></i> SALAH
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Feedback Box (Hidden by default) -->
+                <div id="tf-feedback" class="hidden max-w-2xl mx-auto rounded-xl p-4 font-bold text-lg mb-4 animate-pulse">
+                </div>
+                
+                <button id="tf-next-btn" onclick="nextTrueFalse()" class="hidden mx-auto btn-action bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-8 rounded-full shadow-md">
+                    Lanjut Soal Berikutnya <i class="fas fa-arrow-right"></i>
+                </button>
+                
+                <div id="tf-result" class="hidden">
+                    <h3 class="text-2xl font-bold text-blue-700 mb-2">Permainan Selesai!</h3>
+                    <p class="text-xl mb-4">Skor kamu: <span id="tf-score" class="text-3xl text-orange-500 font-bold">0</span></p>
+                    <button onclick="initTrueFalse()" class="btn-action bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-full">
+                        <i class="fas fa-redo"></i> Main Lagi
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 4: MENJODOHKAN ================= -->
+        <section id="menjodohkan" class="section">
+            <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8 border-t-8 border-pink-400 relative">
+                <h2 class="text-3xl text-pink-700 title-font text-center mb-2"><i class="fas fa-link"></i> Pasangkan Suhu</h2>
+                <p class="text-gray-600 text-center mb-8">Klik sebuah pernyataan di sebelah kiri, lalu klik angka yang tepat di sebelah kanan!</p>
+                
+                <div class="relative w-full max-w-3xl mx-auto" id="match-area">
+                    <!-- SVG layer untuk menggambar garis -->
+                    <svg id="match-svg-layer"></svg>
+                    
+                    <div class="match-container z-20 relative">
+                        <!-- Kolom Kiri (Pernyataan) -->
+                        <div class="match-column w-1/2" id="match-left">
+                            <!-- Diisi oleh JS -->
+                        </div>
+                        
+                        <!-- Kolom Kanan (Jawaban) -->
+                        <div class="match-column w-1/2" id="match-right">
+                            <!-- Diisi oleh JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-8">
+                    <p id="match-status" class="text-lg font-bold text-blue-600 min-h-[30px] mb-4">Pilih pernyataan di sebelah kiri.</p>
+                    <button onclick="initMatchGame()" class="btn-action bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-6 rounded-full shadow-md">
+                        <i class="fas fa-sync-alt"></i> Ulangi Permainan
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 5: KUIS MULTIPLE CHOICE ================= -->
+        <section id="kuis" class="section">
+            <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8 border-t-8 border-orange-400">
+                <h2 class="text-3xl text-orange-600 title-font text-center mb-6"><i class="fas fa-trophy"></i> Uji Kemampuanmu</h2>
+                
+                <div id="quiz-container" class="max-w-2xl mx-auto">
+                    <!-- Header Kuis -->
+                    <div class="flex justify-between items-center mb-4 border-b-2 border-gray-100 pb-2">
+                        <span class="font-bold text-gray-500">Soal <span id="q-current">1</span> dari <span id="q-total">5</span></span>
+                        <div class="w-32 bg-gray-200 rounded-full h-2.5">
+                            <div id="q-progress" class="bg-orange-500 h-2.5 rounded-full" style="width: 20%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Pertanyaan -->
+                    <h3 id="q-text" class="text-xl font-bold text-gray-800 mb-6">
+                        Suhu di kota A adalah -5°C, sedangkan di kota B adalah 2°C. Kota manakah yang lebih dingin?
+                    </h3>
+
+                    <!-- Pilihan Ganda -->
+                    <div id="q-options" class="flex flex-col gap-3">
+                        <!-- Opsi akan di-generate oleh JS -->
+                    </div>
+                </div>
+
+                <!-- Hasil Kuis (Tersembunyi) -->
+                <div id="quiz-result" class="hidden max-w-md mx-auto text-center py-8">
+                    <i class="fas fa-medal text-6xl text-yellow-400 mb-4 drop-shadow-md"></i>
+                    <h3 class="text-3xl font-bold text-gray-800 mb-2">Kuis Selesai!</h3>
+                    <p class="text-gray-600 mb-6">Kamu mendapatkan skor:</p>
+                    <div class="text-6xl font-black text-orange-500 mb-8" id="q-final-score">100</div>
+                    
+                    <p id="q-feedback-msg" class="text-xl font-bold mb-6 text-green-600">Luar biasa! Kamu sangat memahamintya!</p>
+
+                    <button onclick="initQuiz()" class="btn-action w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-xl shadow-md text-lg">
+                        <i class="fas fa-redo mr-2"></i> Ulangi Kuis
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 6: GAME INTERAKTIF ================= -->
+        <section id="game" class="section">
+            <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8 border-t-8 border-indigo-500">
+                <div class="text-center mb-4">
+                    <h2 class="text-3xl text-indigo-700 title-font"><i class="fas fa-gamepad"></i> Game: Tangkap Suhu!</h2>
+                    <p class="text-gray-600">Gunakan panah Kiri/Kanan atau klik tombol di layar untuk menggerakkan keranjang.</p>
+                </div>
+                
+                <div class="bg-blue-50 p-4 rounded-xl border-2 border-blue-200 mb-4 flex justify-between items-center text-lg font-bold">
+                    <div class="text-blue-800">Target: <span id="game-target" class="text-2xl text-red-600 bg-white px-3 py-1 rounded-lg border border-red-200">Bilangan Negatif</span></div>
+                    <div>Skor: <span id="game-score" class="text-2xl text-green-600">0</span></div>
+                    <div>Sisa Waktu: <span id="game-time" class="text-2xl text-orange-500">30</span>s</div>
+                </div>
+
+                <div class="relative max-w-[600px] mx-auto">
+                    <!-- Overlay Start/Game Over -->
+                    <div id="game-overlay" class="absolute inset-0 bg-black/60 backdrop-blur-sm z-10 flex flex-col justify-center items-center rounded-xl text-white">
+                        <h3 id="game-msg-title" class="text-4xl title-font mb-4 text-center">Siap Bermain?</h3>
+                        <p id="game-msg-desc" class="text-lg text-center mb-6 px-4">Tangkap angka yang sesuai dengan Target di atas, hindari yang salah!</p>
+                        <button id="btn-start-game" class="game-btn text-white font-bold py-3 px-8 rounded-full text-xl shadow-lg">
+                            <i class="fas fa-play mr-2"></i> Mulai Game
+                        </button>
+                    </div>
+
+                    <canvas id="game-canvas" width="600" height="400" class="w-full h-auto"></canvas>
+                </div>
+
+                <!-- Kontrol Sentuh / Tombol -->
+                <div class="flex justify-center gap-8 mt-6">
+                    <button id="btn-left" class="game-btn w-20 h-20 rounded-full text-white text-3xl shadow-lg flex justify-center items-center">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <button id="btn-right" class="game-btn w-20 h-20 rounded-full text-white text-3xl shadow-lg flex justify-center items-center">
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal Global untuk Pesan -->
+    <div id="global-modal" class="modal-overlay flex">
+        <div class="modal-content">
+            <i id="modal-icon" class="fas fa-info-circle text-5xl mb-4 text-blue-500"></i>
+            <h3 id="modal-title" class="text-2xl font-bold mb-2">Informasi</h3>
+            <p id="modal-desc" class="text-gray-600 mb-6">Pesan di sini.</p>
+            <button onclick="closeModal()" class="btn-action bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-full w-full">Tutup</button>
+        </div>
+    </div>
+
+
+    <script>
+        // --- 1. NAVIGASI TAB ---
+        function showSection(sectionId) {
+            // Sembunyikan semua section
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+            // Hilangkan status active di semua tombol
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            
+            // Tampilkan section yang dipilih
+            document.getElementById(sectionId).classList.add('active');
+            
+            // Cari tombol yang mengarah ke section ini dan aktifkan
+            const btn = document.querySelector(`button[onclick="showSection('${sectionId}')"]`);
+            if(btn) btn.classList.add('active');
+
+            // Khusus untuk section menjodohkan, perbarui garis SVG saat tab dibuka
+            if (sectionId === 'menjodohkan') {
+                setTimeout(drawAllLines, 100); 
+            }
+            // Hentikan game jika pindah tab
+            if(sectionId !== 'game' && gameLoopId) {
+                stopGame();
+            }
+        }
+
+        // --- 2. MATERI: TERMOMETER INTERAKTIF ---
+        function setTermometer(temp) {
+            const liquid = document.getElementById('materi-liquid');
+            // Mapping suhu (asumsi -50 sampai 50) ke persentase tinggi (0% sampai 100%)
+            // -50 = 0%, 0 = 50%, 50 = 100%
+            let heightPercent = ((temp + 50) / 100) * 100;
+            
+            // Batasi persentase
+            heightPercent = Math.max(10, Math.min(95, heightPercent));
+            
+            liquid.style.height = heightPercent + '%';
+
+            // Ubah warna berdasarkan suhu
+            liquid.className = 'thermometer-liquid'; // reset class
+            if (temp < 0) {
+                liquid.classList.add('liquid-cold');
+            } else if (temp > 0) {
+                liquid.classList.add('liquid-hot');
+            } else {
+                liquid.classList.add('liquid-zero');
+            }
+        }
+
+        // --- 3. FLASH CARD ---
+        const flashcards = [
+            { num: "25°C", desc: "Dua puluh lima derajat Celsius (Positif). Suhu ruangan yang hangat.", type: "hot", icon: "fa-sun" },
+            { num: "0°C", desc: "Nol derajat Celsius. Titik beku air.", type: "zero", icon: "fa-snowflake" },
+            { num: "-10°C", desc: "Negatif sepuluh derajat Celsius. Sangat dingin, di bawah nol.", type: "cold", icon: "fa-icicles" },
+            { num: "100°C", desc: "Seratus derajat Celsius (Positif). Titik didih air.", type: "hot", icon: "fa-fire" },
+            { num: "-5°C", desc: "Negatif lima derajat Celsius. Lebih hangat daripada -10°C, tapi tetap beku.", type: "cold", icon: "fa-snowman" }
+        ];
+        let currentCard = 0;
+        let isFlipped = false;
+
+        function updateFlashCard() {
+            const cardData = flashcards[currentCard];
+            const card = document.getElementById('fc-card');
+            
+            // Pastikan tertutup saat ganti kartu
+            isFlipped = false;
+            card.classList.remove('flipped');
+            
+            setTimeout(() => {
+                document.getElementById('fc-number').textContent = cardData.num;
+                document.getElementById('fc-desc').textContent = cardData.desc;
+                
+                const iconElem = document.getElementById('fc-icon');
+                iconElem.className = `fas ${cardData.icon} text-5xl`;
+
+                card.className = 'flashcard'; // reset theme
+                if(cardData.type === 'zero') card.classList.add('zero');
+                if(cardData.type === 'cold') card.classList.add('negative');
+
+                document.getElementById('fc-counter').textContent = `${currentCard + 1} / ${flashcards.length}`;
+            }, 150); // tunggu setengah animasi flip jika sedang terbuka
+        }
+
+        function flipCard() {
+            isFlipped = !isFlipped;
+            const card = document.getElementById('fc-card');
+            if (isFlipped) {
+                card.classList.add('flipped');
+            } else {
+                card.classList.remove('flipped');
+            }
+        }
+
+        function nextCard() {
+            currentCard = (currentCard + 1) % flashcards.length;
+            updateFlashCard();
+        }
+
+        function prevCard() {
+            currentCard = (currentCard - 1 + flashcards.length) % flashcards.length;
+            updateFlashCard();
+        }
+
+        // Inisialisasi Flashcard
+        updateFlashCard();
+
+        // --- 4. BENAR ATAU SALAH ---
+        const tfQuestions = [
+            { q: "-5°C lebih dingin daripada -2°C.", a: true, msg: "Benar! Pada bilangan negatif, angka yang lebih besar artinya nilainya lebih kecil/dingin (-5 < -2)." },
+            { q: "Suhu 0°C adalah bilangan bulat positif.", a: false, msg: "Salah! Nol (0) bukan bilangan positif maupun negatif, melainkan pembatas keduanya." },
+            { q: "Suhu di bawah nol ditulis dengan tanda minus (-).", a: true, msg: "Benar! Tanda minus menandakan bilangan negatif." },
+            { q: "10°C lebih panas daripada -20°C.", a: true, msg: "Benar! Bilangan positif (10) selalu lebih besar/panas dari bilangan negatif (-20)." },
+            { q: "Semakin ke kiri pada garis bilangan, nilainya semakin besar.", a: false, msg: "Salah! Semakin ke kiri nilainya semakin KECIL." }
+        ];
+        let tfCurrentIndex = 0;
+        let tfScore = 0;
+
+        function initTrueFalse() {
+            tfCurrentIndex = 0;
+            tfScore = 0;
+            document.getElementById('tf-total').textContent = tfQuestions.length;
+            document.getElementById('tf-result').classList.add('hidden');
+            
+            // Aktifkan kembali tombol
+            const buttons = document.querySelectorAll('#benarsalah .flex button.btn-action');
+            buttons.forEach(btn => {
+                btn.disabled = false;
+                btn.style.opacity = "1";
+            });
+            
+            loadTrueFalseQuestion();
+        }
+
+        function loadTrueFalseQuestion() {
+            const q = tfQuestions[tfCurrentIndex];
+            document.getElementById('tf-current').textContent = tfCurrentIndex + 1;
+            document.getElementById('tf-question').textContent = q.q;
+            
+            const feedback = document.getElementById('tf-feedback');
+            feedback.classList.add('hidden');
+            feedback.className = "hidden max-w-2xl mx-auto rounded-xl p-4 font-bold text-lg mb-4"; // reset class
+            
+            document.getElementById('tf-next-btn').classList.add('hidden');
+            
+            // Enable tombol
+            const buttons = document.querySelectorAll('#benarsalah .flex button.btn-action');
+            buttons.forEach(btn => {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            });
+        }
+
+        function checkTrueFalse(userAnswer) {
+            const currentQ = tfQuestions[tfCurrentIndex];
+            const isCorrect = (userAnswer === currentQ.a);
+            
+            if (isCorrect) tfScore += 20;
+
+            const feedback = document.getElementById('tf-feedback');
+            feedback.classList.remove('hidden');
+            
+            if (isCorrect) {
+                feedback.classList.add('bg-green-100', 'text-green-800', 'border-2', 'border-green-400');
+                feedback.innerHTML = `<i class="fas fa-check-circle text-green-600 mr-2"></i> ${currentQ.msg}`;
+            } else {
+                feedback.classList.add('bg-red-100', 'text-red-800', 'border-2', 'border-red-400');
+                feedback.innerHTML = `<i class="fas fa-times-circle text-red-600 mr-2"></i> ${currentQ.msg}`;
+            }
+
+            // Disable buttons
+            const buttons = document.querySelectorAll('#benarsalah .flex button.btn-action');
+            buttons.forEach(btn => {
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+            });
+
+            document.getElementById('tf-next-btn').classList.remove('hidden');
+        }
+
+        function nextTrueFalse() {
+            tfCurrentIndex++;
+            if (tfCurrentIndex < tfQuestions.length) {
+                loadTrueFalseQuestion();
+            } else {
+                // Tampilkan hasil
+                document.getElementById('tf-question').textContent = "Selesai!";
+                document.getElementById('tf-feedback').classList.add('hidden');
+                document.getElementById('tf-next-btn').classList.add('hidden');
+                
+                // Sembunyikan opsi
+                document.querySelector('#benarsalah .flex.justify-center.gap-6').classList.add('hidden');
+                
+                const resultArea = document.getElementById('tf-result');
+                resultArea.classList.remove('hidden');
+                document.getElementById('tf-score').textContent = tfScore;
+                
+                // Show again options container for next time
+                setTimeout(() => {
+                    document.querySelector('#benarsalah .flex.justify-center.gap-6').classList.remove('hidden');
+                    // but make them display none via a wrapper if needed, logic simplified here by just hiding the inner flex container temporarily
+                }, 100);
+            }
+        }
+        
+        // Setup initial
+        initTrueFalse();
+
+        // --- 5. MENJODOHKAN ---
+        const matchPairs = [
+            { id: 1, left: "Suhu sepuluh derajat di bawah nol", right: "-10", rightText: "-10°C" },
+            { id: 2, left: "Titik beku air", right: "0", rightText: "0°C" },
+            { id: 3, left: "Lebih hangat dari -5°C tapi di bawah 0°C", right: "-2", rightText: "-2°C" },
+            { id: 4, left: "Suhu lima belas derajat di atas nol", right: "15", rightText: "15°C" }
+        ];
+
+        let selectedLeft = null;
+        let matchedPairs = []; // simpan pasangan yang sudah benar
+        let lines = []; // data garis svg
+
+        function initMatchGame() {
+            const leftCol = document.getElementById('match-left');
+            const rightCol = document.getElementById('match-right');
+            leftCol.innerHTML = '';
+            rightCol.innerHTML = '';
+            selectedLeft = null;
+            matchedPairs = [];
+            lines = [];
+            document.getElementById('match-status').innerHTML = "Pilih pernyataan di sebelah kiri.";
+            document.getElementById('match-status').className = "text-lg font-bold text-blue-600 min-h-[30px] mb-4";
+
+            // Acak urutan kanan
+            let shuffledRights = [...matchPairs].sort(() => Math.random() - 0.5);
+
+            matchPairs.forEach(pair => {
+                // Buat item kiri
+                const leftItem = document.createElement('div');
+                leftItem.className = 'match-item bg-blue-50';
+                leftItem.id = `left-${pair.id}`;
+                leftItem.textContent = pair.left;
+                leftItem.onclick = () => selectLeft(pair.id, leftItem);
+                leftCol.appendChild(leftItem);
+            });
+
+            shuffledRights.forEach(pair => {
+                // Buat item kanan
+                const rightItem = document.createElement('div');
+                rightItem.className = 'match-item bg-orange-50 text-xl font-bold';
+                rightItem.id = `right-${pair.id}`;
+                rightItem.textContent = pair.rightText;
+                rightItem.onclick = () => selectRight(pair.id, rightItem);
+                rightCol.appendChild(rightItem);
+            });
+            
+            drawAllLines();
+        }
+
+        function selectLeft(id, el) {
+            if (matchedPairs.includes(id)) return; // sudah benar, abaikan
+
+            // Reset seleksi sebelumnya
+            document.querySelectorAll('#match-left .match-item').forEach(item => {
+                if(!item.classList.contains('matched')) item.classList.remove('selected');
+            });
+
+            selectedLeft = id;
+            el.classList.add('selected');
+            document.getElementById('match-status').innerHTML = "Sekarang, cari jawaban yang tepat di sebelah kanan!";
+            document.getElementById('match-status').className = "text-lg font-bold text-orange-600 min-h-[30px] mb-4";
+        }
+
+        function selectRight(id, el) {
+            if (matchedPairs.includes(id)) return;
+            if (!selectedLeft) {
+                document.getElementById('match-status').innerHTML = "Pilih pernyataan di sebelah kiri terlebih dahulu!";
+                document.getElementById('match-status').className = "text-lg font-bold text-red-500 min-h-[30px] mb-4";
+                return;
+            }
+
+            const leftEl = document.getElementById(`left-${selectedLeft}`);
+
+            if (selectedLeft === id) {
+                // Benar!
+                el.classList.add('matched');
+                leftEl.classList.remove('selected');
+                leftEl.classList.add('matched');
+                
+                matchedPairs.push(id);
+                
+                // Tambah garis
+                lines.push({ left: `left-${id}`, right: `right-${id}` });
+                drawAllLines();
+
+                document.getElementById('match-status').innerHTML = "Tepat Sekali! <i class='fas fa-check text-green-500'></i>";
+                document.getElementById('match-status').className = "text-lg font-bold text-green-600 min-h-[30px] mb-4 animate-bounce";
+                
+                selectedLeft = null;
+
+                // Cek menang
+                if (matchedPairs.length === matchPairs.length) {
+                    setTimeout(() => {
+                        showModal("Selamat!", "Kamu berhasil memasangkan semua suhu dengan benar!", "fa-trophy");
+                    }, 500);
+                }
+
+            } else {
+                // Salah
+                el.classList.add('wrong-match');
+                document.getElementById('match-status').innerHTML = "Ups, salah! Coba lagi.";
+                document.getElementById('match-status').className = "text-lg font-bold text-red-500 min-h-[30px] mb-4";
+                
+                setTimeout(() => {
+                    el.classList.remove('wrong-match');
+                }, 500);
+            }
+        }
+
+        function drawAllLines() {
+            const svg = document.getElementById('match-svg-layer');
+            const container = document.getElementById('match-area');
+            
+            // Sesuaikan ukuran SVG
+            svg.setAttribute('width', container.offsetWidth);
+            svg.setAttribute('height', container.offsetHeight);
+            svg.innerHTML = ''; // bersihkan garis lama
+
+            const containerRect = container.getBoundingClientRect();
+
+            lines.forEach(pair => {
+                const el1 = document.getElementById(pair.left);
+                const el2 = document.getElementById(pair.right);
+                
+                if(!el1 || !el2) return;
+
+                const rect1 = el1.getBoundingClientRect();
+                const rect2 = el2.getBoundingClientRect();
+
+                // Hitung kordinat relatif terhadap container
+                const x1 = (rect1.right - containerRect.left);
+                const y1 = (rect1.top + rect1.height / 2 - containerRect.top);
+                
+                const x2 = (rect2.left - containerRect.left);
+                const y2 = (rect2.top + rect2.height / 2 - containerRect.top);
+
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', x1);
+                line.setAttribute('y1', y1);
+                line.setAttribute('x2', x2);
+                line.setAttribute('y2', y2);
+                line.setAttribute('stroke', '#22c55e'); // warna hijau
+                line.setAttribute('stroke-width', '4');
+                line.setAttribute('stroke-linecap', 'round');
+                
+                // Tambahkan efek shadow pada garis agar menarik
+                line.style.filter = "drop-shadow(0px 2px 2px rgba(0,0,0,0.2))";
+
+                svg.appendChild(line);
+            });
+        }
+        
+        // Redraw lines saat window resize
+        window.addEventListener('resize', () => {
+            const latihanActive = document.getElementById('latihan').classList.contains('active');
+            const matchVisible = document.getElementById('lat-menjodohkan').classList.contains('block');
+            if(latihanActive && matchVisible){
+                drawAllLines();
+            }
+        });
+
+        initMatchGame();
+
+        // --- 6. KUIS MULTIPLE CHOICE ---
+        const quizData = [
+            {
+                q: "Bilangan manakah yang nilainya paling kecil?",
+                options: ["-5", "0", "2", "-12"],
+                ans: 3
+            },
+            {
+                q: "Suhu di sebuah pegunungan pada malam hari adalah 3 derajat di bawah nol. Penulisan bilangannya adalah...",
+                options: ["3°C", "-3°C", "0°C", "30°C"],
+                ans: 1
+            },
+            {
+                q: "Urutkan suhu berikut dari yang paling DINGIN ke PANAS: -2°C, 5°C, -8°C, 0°C",
+                options: [
+                    "5°C, 0°C, -2°C, -8°C",
+                    "-2°C, -8°C, 0°C, 5°C",
+                    "-8°C, -2°C, 0°C, 5°C",
+                    "0°C, -2°C, 5°C, -8°C"
+                ],
+                ans: 2
+            },
+            {
+                q: "Sebuah kapal selam berada 50 meter di bawah permukaan laut. Bilangan bulat yang tepat untuk menunjukkannya adalah...",
+                options: ["+50", "0", "50", "-50"],
+                ans: 3
+            },
+            {
+                q: "Jika suhu awal adalah -4°C, lalu naik 6°C, maka suhu akhirnya menjadi...",
+                options: ["10°C", "2°C", "-10°C", "-2°C"],
+                ans: 1
+            }
+        ];
+
+        let currentQIndex = 0;
+        let quizScore = 0;
+
+        function initQuiz() {
+            currentQIndex = 0;
+            quizScore = 0;
+            document.getElementById('quiz-result').classList.add('hidden');
+            document.getElementById('quiz-container').classList.remove('hidden');
+            document.getElementById('q-total').textContent = quizData.length;
+            loadQuizQuestion();
+        }
+
+        function loadQuizQuestion() {
+            const qData = quizData[currentQIndex];
+            document.getElementById('q-current').textContent = currentQIndex + 1;
+            
+            // Update progress bar
+            const progress = ((currentQIndex) / quizData.length) * 100;
+            document.getElementById('q-progress').style.width = progress + '%';
+
+            document.getElementById('q-text').textContent = qData.q;
+            
+            const optionsContainer = document.getElementById('q-options');
+            optionsContainer.innerHTML = ''; // clear old
+
+            qData.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'w-full text-left bg-gray-50 hover:bg-orange-100 border-2 border-gray-200 hover:border-orange-400 p-4 rounded-xl font-semibold text-gray-700 transition-all flex items-center group';
+                
+                // Label A, B, C, D
+                const letter = String.fromCharCode(65 + index);
+                
+                btn.innerHTML = `
+                    <span class="w-8 h-8 rounded-full bg-gray-200 group-hover:bg-orange-400 group-hover:text-white flex items-center justify-center mr-3 font-bold text-sm transition-colors">${letter}</span>
+                    <span>${opt}</span>
+                `;
+                
+                btn.onclick = () => selectQuizOption(index, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function selectQuizOption(selectedIndex, btnElement) {
+            // Disable semua tombol agar tidak bisa klik 2 kali
+            const buttons = document.querySelectorAll('#q-options button');
+            buttons.forEach(btn => btn.disabled = true);
+
+            const correctIndex = quizData[currentQIndex].ans;
+
+            if (selectedIndex === correctIndex) {
+                // Benar
+                btnElement.classList.replace('bg-gray-50', 'bg-green-100');
+                btnElement.classList.replace('border-gray-200', 'border-green-500');
+                btnElement.querySelector('span.w-8').classList.replace('bg-gray-200', 'bg-green-500');
+                btnElement.querySelector('span.w-8').classList.add('text-white');
+                quizScore += (100 / quizData.length);
+            } else {
+                // Salah
+                btnElement.classList.replace('bg-gray-50', 'bg-red-100');
+                btnElement.classList.replace('border-gray-200', 'border-red-500');
+                btnElement.querySelector('span.w-8').classList.replace('bg-gray-200', 'bg-red-500');
+                btnElement.querySelector('span.w-8').classList.add('text-white');
+                
+                // Highlight yang benar
+                const correctBtn = buttons[correctIndex];
+                correctBtn.classList.replace('bg-gray-50', 'bg-green-50');
+                correctBtn.classList.replace('border-gray-200', 'border-green-400');
+            }
+
+            // Jeda sebentar sebelum lanjut
+            setTimeout(() => {
+                currentQIndex++;
+                if (currentQIndex < quizData.length) {
+                    loadQuizQuestion();
+                } else {
+                    finishQuiz();
+                }
+            }, 1200);
+        }
+
+        function finishQuiz() {
+            document.getElementById('quiz-container').classList.add('hidden');
+            const resContainer = document.getElementById('quiz-result');
+            resContainer.classList.remove('hidden');
+            
+            // Set final progress
+            document.getElementById('q-progress').style.width = '100%';
+
+            const finalScore = Math.round(quizScore);
+            document.getElementById('q-final-score').textContent = finalScore;
+            
+            let msg = "";
+            let color = "";
+            if (finalScore === 100) { msg = "Sempurna! Kamu master Bilangan Bulat!"; color = "text-green-600"; }
+            else if (finalScore >= 80) { msg = "Hebat! Pemahamanmu sangat baik."; color = "text-blue-600"; }
+            else if (finalScore >= 60) { msg = "Bagus! Terus berlatih agar lebih mahir."; color = "text-yellow-600"; }
+            else { msg = "Jangan menyerah, ayo baca materinya lagi!"; color = "text-red-500"; }
+
+            const msgEl = document.getElementById('q-feedback-msg');
+            msgEl.textContent = msg;
+            msgEl.className = `text-xl font-bold mb-6 ${color}`;
+        }
+
+        initQuiz();
+
+
+        // --- 7. GAME: TANGKAP SUHU ---
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Game variables
+        let gameLoopId;
+        let gameActive = false;
+        let score = 0;
+        let timeLeft = 30;
+        let lastTime = 0;
+        let spawnTimer = 0;
+        let targetType = 'negatif'; // 'negatif', 'positif', 'nol'
+        
+        // Player (Keranjang)
+        const player = {
+            x: canvas.width / 2 - 40,
+            y: canvas.height - 50,
+            width: 80,
+            height: 40,
+            speed: 8,
+            movingLeft: false,
+            movingRight: false
+        };
+
+        // Benda yang jatuh (Angka Suhu)
+        let drops = [];
+
+        function initGame() {
+            document.getElementById('game-overlay').classList.add('hidden');
+            score = 0;
+            timeLeft = 30;
+            drops = [];
+            player.x = canvas.width / 2 - player.width / 2;
+            updateScoreUI();
+            
+            // Pilih target acak di awal
+            pickRandomTarget();
+            
+            gameActive = true;
+            lastTime = performance.now();
+            
+            // Mulai loop
+            cancelAnimationFrame(gameLoopId);
+            gameLoopId = requestAnimationFrame(gameLoop);
+            
+            // Timer mundur
+            const timerInterval = setInterval(() => {
+                if(!gameActive) {
+                    clearInterval(timerInterval);
+                    return;
+                }
+                timeLeft--;
+                document.getElementById('game-time').textContent = timeLeft;
+                if(timeLeft <= 0) {
+                    gameOver();
+                }
+            }, 1000);
+        }
+
+        function pickRandomTarget() {
+            const types = ['negatif', 'positif', 'nol'];
+            targetType = types[Math.floor(Math.random() * types.length)];
+            
+            const targetSpan = document.getElementById('game-target');
+            if(targetType === 'negatif') {
+                targetSpan.textContent = "Bilangan Negatif (<0)";
+                targetSpan.className = "text-xl bg-blue-100 text-blue-700 px-3 py-1 rounded-lg border border-blue-300";
+            } else if(targetType === 'positif') {
+                targetSpan.textContent = "Bilangan Positif (>0)";
+                targetSpan.className = "text-xl bg-red-100 text-red-700 px-3 py-1 rounded-lg border border-red-300";
+            } else {
+                targetSpan.textContent = "Angka Nol (0)";
+                targetSpan.className = "text-xl bg-green-100 text-green-700 px-3 py-1 rounded-lg border border-green-300";
+            }
+        }
+
+        function spawnDrop() {
+            // Tentukan nilai acak -20 sampai 20
+            const val = Math.floor(Math.random() * 41) - 20; 
+            
+            let type = 'nol';
+            if (val < 0) type = 'negatif';
+            if (val > 0) type = 'positif';
+
+            const size = 30;
+            drops.push({
+                x: Math.random() * (canvas.width - size * 2) + size,
+                y: -30,
+                radius: size,
+                value: val,
+                type: type,
+                speed: 2 + Math.random() * 2 // kecepatan jatuh
+            });
+        }
+
+        function updateGame(deltaTime) {
+            // Gerak player
+            if (player.movingLeft && player.x > 0) {
+                player.x -= player.speed;
+            }
+            if (player.movingRight && player.x < canvas.width - player.width) {
+                player.x += player.speed;
+            }
+
+            // Spawn drops
+            spawnTimer += deltaTime;
+            if (spawnTimer > 1000) { // tiap 1 detik
+                spawnDrop();
+                spawnTimer = 0;
+            }
+
+            // Ganti target tiap 10 detik (opsional, bikin seru)
+            if (timeLeft > 0 && timeLeft % 10 === 0 && spawnTimer > 900) {
+                 pickRandomTarget();
+            }
+
+            // Update drops
+            for (let i = drops.length - 1; i >= 0; i--) {
+                let d = drops[i];
+                d.y += d.speed;
+
+                // Deteksi tabrakan
+                if (d.y + d.radius > player.y && 
+                    d.y - d.radius < player.y + player.height &&
+                    d.x + d.radius > player.x && 
+                    d.x - d.radius < player.x + player.width) {
+                    
+                    // Tangkap!
+                    if (d.type === targetType) {
+                        score += 10;
+                    } else {
+                        score -= 5;
+                    }
+                    updateScoreUI();
+                    drops.splice(i, 1);
+                    continue;
+                }
+
+                // Hapus kalau lewat layar
+                if (d.y > canvas.height + d.radius) {
+                    drops.splice(i, 1);
+                }
+            }
+        }
+
+        function drawGame() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Gambar Player (Keranjang/Awan)
+            ctx.fillStyle = '#475569'; // warna keranjang
+            
+            // Gambar base keranjang
+            ctx.beginPath();
+            ctx.roundRect(player.x, player.y, player.width, player.height, [5, 5, 20, 20]);
+            ctx.fill();
+            // Bibir keranjang
+            ctx.fillStyle = '#94a3b8';
+            ctx.beginPath();
+            ctx.roundRect(player.x - 5, player.y - 5, player.width + 10, 10, 5);
+            ctx.fill();
+
+            // Gambar drops (Bulatan dengan teks)
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = 'bold 18px Nunito, sans-serif';
+
+            drops.forEach(d => {
+                // Warna bulatan
+                ctx.beginPath();
+                ctx.arc(d.x, d.y, d.radius, 0, Math.PI * 2);
+                
+                if (d.value < 0) {
+                    ctx.fillStyle = '#bfdbfe'; // biru muda
+                    ctx.strokeStyle = '#3b82f6';
+                } else if (d.value > 0) {
+                    ctx.fillStyle = '#fecaca'; // merah muda
+                    ctx.strokeStyle = '#ef4444';
+                } else {
+                    ctx.fillStyle = '#bbf7d0'; // hijau muda
+                    ctx.strokeStyle = '#22c55e';
+                }
+                
+                ctx.fill();
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                // Teks Angka
+                ctx.fillStyle = '#1e293b';
+                ctx.fillText(d.value, d.x, d.y);
+            });
+        }
+
+        function gameLoop(timestamp) {
+            if (!gameActive) return;
+            
+            let deltaTime = timestamp - lastTime;
+            lastTime = timestamp;
+
+            updateGame(deltaTime);
+            drawGame();
+
+            gameLoopId = requestAnimationFrame(gameLoop);
+        }
+
+        function updateScoreUI() {
+            document.getElementById('game-score').textContent = score;
+        }
+
+        function gameOver() {
+            gameActive = false;
+            const overlay = document.getElementById('game-overlay');
+            overlay.classList.remove('hidden');
+            
+            document.getElementById('game-msg-title').textContent = "Waktu Habis!";
+            document.getElementById('game-msg-desc').innerHTML = `Skor akhir kamu: <span class="text-3xl text-yellow-300 font-bold">${score}</span><br>Hebat!`;
+            
+            const btn = document.getElementById('btn-start-game');
+            btn.innerHTML = '<i class="fas fa-redo mr-2"></i> Main Lagi';
+        }
+
+        function stopGame() {
+            gameActive = false;
+            cancelAnimationFrame(gameLoopId);
+        }
+
+        // Event Listener Tombol Game & Keyboard
+        document.getElementById('btn-start-game').addEventListener('click', initGame);
+
+        // Keyboard
+        window.addEventListener('keydown', (e) => {
+            if(!gameActive) return;
+            if(e.key === 'ArrowLeft') player.movingLeft = true;
+            if(e.key === 'ArrowRight') player.movingRight = true;
+            // Cegah scroll saat main game
+            if(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && document.getElementById('game').classList.contains('active')){
+                e.preventDefault();
+            }
+        });
+        window.addEventListener('keyup', (e) => {
+            if(e.key === 'ArrowLeft') player.movingLeft = false;
+            if(e.key === 'ArrowRight') player.movingRight = false;
+        });
+
+        // Touch / Mouse control untuk button UI game
+        const btnLeft = document.getElementById('btn-left');
+        const btnRight = document.getElementById('btn-right');
+        
+        btnLeft.addEventListener('mousedown', () => player.movingLeft = true);
+        btnLeft.addEventListener('mouseup', () => player.movingLeft = false);
+        btnLeft.addEventListener('mouseleave', () => player.movingLeft = false);
+        btnLeft.addEventListener('touchstart', (e) => { e.preventDefault(); player.movingLeft = true; });
+        btnLeft.addEventListener('touchend', (e) => { e.preventDefault(); player.movingLeft = false; });
+
+        btnRight.addEventListener('mousedown', () => player.movingRight = true);
+        btnRight.addEventListener('mouseup', () => player.movingRight = false);
+        btnRight.addEventListener('mouseleave', () => player.movingRight = false);
+        btnRight.addEventListener('touchstart', (e) => { e.preventDefault(); player.movingRight = true; });
+        btnRight.addEventListener('touchend', (e) => { e.preventDefault(); player.movingRight = false; });
+
+
+        // --- 8. UTILS & GLOBAL MODAL ---
+        function showModal(title, desc, iconClass = "fa-info-circle") {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-desc').textContent = desc;
+            document.getElementById('modal-icon').className = `fas ${iconClass} text-5xl mb-4`;
+            
+            if(iconClass === 'fa-trophy') document.getElementById('modal-icon').classList.add('text-yellow-400');
+            else document.getElementById('modal-icon').classList.add('text-blue-500');
+
+            document.getElementById('global-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('global-modal').style.display = 'none';
+        }
+
+        // Tampilkan Materi saat awal diload
+        window.onload = () => {
+            showSection('materi');
+            drawGame(); // Gambar initial frame canvas game
+        };
+
+    </script>
+</body>
+</html>
